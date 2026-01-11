@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>JavaScript Guessing Game</title>
+    <link rel="stylesheet" type="text/css" href="css/myStyles.css">
+
+    <script type="text/javascript">
+        function setMessage(kind, text) {
+            var el = document.getElementById("message");
+            if (!el) return;
+
+            el.className = "message" + (kind ? " message--" + kind : "");
+            el.textContent = text || "";
+        }
+
+        function clearMessage() {
+            setMessage("", "");
+        }
+
+        /* Validate User Input */
+        function validateNumber(input) {
+
+            var n = Number(input);
+
+            if (!Number.isFinite(n)) {
+                setMessage("error", "Please enter a whole number between 1 and 999.");
+                return false;
+            }
+
+            if (!Number.isInteger(n)) {
+                setMessage("error", "Please enter a whole number (no decimals).");
+                return false;
+            }
+
+            if (n < 1 || n > 999) {
+                setMessage("error", "Your number must be between 1 and 999 (inclusive).");
+                return false;
+            }
+
+            clearMessage();
+            return true;
+        }
+
+        /* Guess a number between two values */
+        function guessNumber(minGuess, maxGuess) {
+
+            // Return a number between the minimum and maximum values
+            return Math.floor(Math.random() * (maxGuess - minGuess + 1) + minGuess);
+        }
+
+        function updateOutput(currentOutput, comparison, guessIndex, guess) {
+            var outcomeText = "";
+            var outcomeClass = "";
+
+            if (comparison == "low") {
+                outcomeText = "Too low";
+                outcomeClass = "logEntry--low";
+            } else if (comparison == "high") {
+                outcomeText = "Too high";
+                outcomeClass = "logEntry--high";
+            } else {
+                outcomeText = "Correct";
+                outcomeClass = "logEntry--equal";
+            }
+
+            currentOutput +=
+                "<div class=\"logEntry " + outcomeClass + "\">" +
+                "<div class=\"logEntry__meta\">" +
+                "<span class=\"pill\">Guess " + guessIndex + "</span>" +
+                "<span class=\"pill pill--muted\">" + outcomeText + "</span>" +
+                "</div>" +
+                "<div class=\"logEntry__value\">" + guess + "</div>" +
+                "</div>";
+
+            if (comparison == "equal") {
+                currentOutput += "<div class=\"result result--win\">I guessed your number. I win!</div>";
+                setMessage("success", "Computer wins in " + guessIndex + " guesses.");
+            }
+
+            if (comparison != "equal" && guessIndex == 10) {
+                currentOutput += "<div class=\"result result--lose\">I did not guess your number. You win!</div>";
+                setMessage("success", "You win! The computer used all 10 guesses.");
+            }
+
+            document.getElementById("output").innerHTML = currentOutput;
+            return currentOutput;
+        }
+
+        function guessingGame() {
+
+            var playerInput = 0; // Player's input
+            var isValid = false; // Player input validation
+            var guessMin = 1; // Computer's lower guess limit
+            var guessMax = 999; // Computer's upper guess limit
+            var guess = 0; // Computer's guess
+            var htmlOutput = ""; // Program output
+
+            // Get player input
+            playerInput = document.getElementById("playerNumber").value;
+
+            // Validate player input
+            isValid = validateNumber(playerInput);
+
+            if (isValid) {
+                setMessage("info", "Computer is guessing…");
+                htmlOutput += "<div class=\"lead\">You chose <strong>" + Number(playerInput) + "</strong>. I will try to guess it in 10 tries.</div>";
+                document.getElementById("output").innerHTML = htmlOutput;
+
+                // Make a maximum of 10 guesses
+                for (var i = 0; i < 10; i++) {
+
+                    // Make a guess
+                    guess = guessNumber(guessMin, guessMax);
+
+                    // If the guess is too low
+                    if (guess < playerInput) {
+
+                        // Set the guess minimum to the current guess value
+                        guessMin = guess + 1;
+
+                        // Update and display output
+                        htmlOutput = updateOutput(htmlOutput, "low", (i + 1), guess);
+                    }
+
+                    // Else if the guess is too high
+                    else if (guess > playerInput) {
+
+                        // Set the guess maximum to the current guess value
+                        guessMax = guess - 1;
+
+                        // Update and display output
+                        htmlOutput = updateOutput(htmlOutput, "high", (i + 1), guess);
+                    }
+
+                    // Else the computer has chosen the correct number
+                    else {
+
+                        // Update and display output
+                        htmlOutput = updateOutput(htmlOutput, "equal", (i + 1), guess);
+
+                        // Break out of loop
+                        break;
+                    }
+                }
+            }
+        }
+
+        function resetGame() {
+            clearMessage();
+
+            var outputEl = document.getElementById("output");
+            if (outputEl) outputEl.innerHTML = "";
+
+            var inputEl = document.getElementById("playerNumber");
+            if (inputEl) {
+                inputEl.value = "";
+                inputEl.focus();
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", function() {
+            var form = document.getElementById("gameForm");
+            if (form) {
+                form.addEventListener("submit", function(e) {
+                    e.preventDefault();
+                    guessingGame();
+                });
+            }
+
+            var resetBtn = document.getElementById("resetBtn");
+            if (resetBtn) {
+                resetBtn.addEventListener("click", function() {
+                    resetGame();
+                });
+            }
+        });
+    </script>
+</head>
+
+<body>
+    <div class="page">
+        <header class="header">
+            <h1 class="title">JavaScript Guessing Game</h1>
+            <p class="subtitle">Choose a secret number. The computer gets 10 tries.</p>
+            <div class="metaRow" aria-label="Game details">
+                <span class="tag tag--accent">Range: 1–999</span>
+                <span class="tag">Attempts: 10</span>
+            </div>
+        </header>
+
+        <main class="card">
+            <form id="gameForm" novalidate>
+                <div class="field">
+                    <label for="playerNumber">Your secret number</label>
+                    <input type="number" name="playerNumber" id="playerNumber" inputmode="numeric" min="1" max="999" step="1" placeholder="1–999" required>
+                    <p class="hint">Enter a whole number between <strong>1</strong> and <strong>999</strong>. Then click <strong>Start guessing</strong>.</p>
+                </div>
+
+                <div class="actions">
+                    <button id="submit" type="submit" class="btn btn-primary">Start guessing</button>
+                    <button id="resetBtn" type="button" class="btn btn-ghost">Reset</button>
+                </div>
+
+                <div id="message" class="message" role="status" aria-live="polite"></div>
+
+                <section class="output" aria-labelledby="outputTitle">
+                    <h2 id="outputTitle">Round log</h2>
+                    <div id="output" class="outputBody"></div>
+                </section>
+            </form>
+        </main>
+
+        <footer class="footer">
+            <span>Tip: This game uses random guesses within a shrinking range.</span>
+        </footer>
+    </div>
+</body>
+
+</html>
