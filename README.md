@@ -1,53 +1,61 @@
-# JavaScript Guessing Game
 
-A small, single-page JavaScript project where you secretly choose a number and the computer tries to guess it in **10 tries or fewer**.
+# JavaScript Guessing Game (Vanilla JS)
 
-This is a simple HTML/CSS/JavaScript exercise focused on:
+A small, single-page browser game: you pick a secret number (1–999) and the computer tries to guess it in **10 attempts**.
 
-- Validating user input
-- Basic control flow (loops + conditionals)
-- Random number generation
-- Updating the DOM with game output
+This project is intentionally “no framework / no build step” and is designed to showcase solid fundamentals: DOM manipulation, validation, event handling, and thoughtful UI/UX.
 
-## How To Play
+## Highlights (Recruiter-Friendly)
 
-1. Enter a whole number between **1** and **999** (inclusive).
-2. Click **Submit**.
-3. The computer will make up to **10 guesses**.
-4. For each guess, the game compares the guess to your number and prints whether the guess was **too low** or **too high**.
-5. If the computer guesses correctly within 10 tries, it wins. Otherwise, you win.
+- **Vanilla JavaScript app structure**: logic moved out of HTML into [js/script.js](js/script.js) (separation of concerns).
+- **Input validation + user feedback**: guards against non-numeric, non-integer, and out-of-range values with inline status messaging.
+- **Accessible UI**: semantic labels, a live-updating status area (`role="status"` + `aria-live="polite"`), and keyboard-friendly form behavior.
+- **Responsive, modern CSS**: CSS variables, `clamp()` typography, Grid/Flex layouts, focus rings, and `prefers-reduced-motion` support.
+- **Clear “round log” output**: each guess is rendered as a styled log entry with contextual state (“Too low”, “Too high”, “Correct”).
 
-## How It Works
+## How to Play
 
-The game keeps track of a shrinking range of possible answers:
+1. Enter a whole number between **1** and **999**.
+2. Click **Start guessing**.
+3. The computer makes up to **10 guesses** and prints a round-by-round log.
+4. If it guesses correctly within 10 tries, the computer wins; otherwise, you win.
 
-- Starts with `min = 1` and `max = 999`
-- Each time it guesses:
-	- If the guess is too low, it updates `min = guess + 1`
-	- If the guess is too high, it updates `max = guess - 1`
+## How It Works (Developer Notes)
 
-Each new guess is chosen randomly within the current `[min, max]` range.
+The computer uses a **random guess within a shrinking range**:
 
-### Input Validation
+- Start with `min = 1`, `max = 999`.
+- Each guess picks a random integer in `[min, max]`.
+- If the guess is too low → update `min = guess + 1`.
+- If the guess is too high → update `max = guess - 1`.
 
-Your input is checked before the game runs:
+This is not a pure binary search (by design). It demonstrates maintaining state across iterations and producing user-facing output each step.
 
-- Must be a number
-- Must be between 1 and 999 (inclusive)
+### Key behaviors in the code
 
-If validation fails, the game shows an alert explaining what was wrong.
+- **Validation**: `validateNumber(input)` ensures finite integer input in range.
+- **Guess generation**: `guessNumber(minGuess, maxGuess)` returns an integer in the current bounds.
+- **UI updates**:
+  - `setMessage(kind, text)` / `clearMessage()` update the status banner.
+  - `updateOutput(...)` appends a styled entry to the round log.
+- **Event wiring**: listeners are attached on `DOMContentLoaded` and the form submit is intercepted to prevent full-page reload.
 
-## Running Locally
+## Design / UI Implementation Notes
 
-This project is static (no build step).
+The UI was built to feel “portfolio-ready” while staying lightweight:
 
-Option A — open directly:
+- **Consistent theme via CSS variables** (`:root` tokens for backgrounds, accents, and semantic colors).
+- **Interactive affordances**: focus-visible ring, button hover/active states, and readable spacing.
+- **Readable output layout**: log entries use a two-column grid (meta + numeric guess) with color-coded left borders.
+- **Motion sensitivity**: transitions are disabled under `prefers-reduced-motion: reduce`.
 
-- Open `index.html` in a web browser.
+## Run Locally
 
-Option B — serve with a simple local web server (recommended for consistent browser behavior):
+No build step.
 
-- Use any basic static file server and navigate to the served page.
+- Option A: open [index.html](index.html) directly in your browser.
+- Option B (recommended): serve as static files.
+  - Any static server works (VS Code Live Server, `python -m http.server`, etc.).
 
 ## Project Structure
 
@@ -55,37 +63,19 @@ Option B — serve with a simple local web server (recommended for consistent br
 .
 ├─ index.html
 ├─ README.md
-└─ css/
-	 └─ myStyles.css
+├─ css/
+│  └─ myStyles.css
+└─ js/
+   └─ script.js
 ```
 
-## Files Of Interest
+## Customization Ideas
 
-- `index.html`
-	- Contains the HTML UI and the JavaScript game logic (inline `<script>`).
-	- Key functions:
-		- `validateNumber(input)` — checks user input is numeric and within range.
-		- `guessNumber(minGuess, maxGuess)` — returns a random integer within the current bounds.
-		- `updateOutput(...)` — appends a new result message to the output area.
-		- `guessingGame()` — orchestrates the full game loop (up to 10 guesses).
-
-- `css/myStyles.css`
-	- Minimal styling for layout/centering.
-
-## Customization
-
-Common tweaks you can make:
-
-- Change the allowed range:
-	- Update the validation rules in `validateNumber`.
-	- Update the initial bounds in `guessingGame` (`guessMin`, `guessMax`).
-
-- Change number of guesses:
-	- Update the loop limit in `guessingGame`.
-	- Update the “win/lose” check in `updateOutput`.
+- Change range: update the HTML input attributes, `validateNumber`, and the initial `guessMin/guessMax` values.
+- Change attempt limit: update the loop limit in `guessingGame()` and the “used all guesses” check in `updateOutput()`.
+- Swap strategy: replace the random-in-range guess with a deterministic mid-point guess to turn it into true binary search.
 
 ## Notes / Limitations
 
-- The guessing strategy is **random within a narrowing range** (not a true binary search), so it may sometimes fail to guess within 10 tries even though it is narrowing the bounds.
-- Input is read from a text field; the validation step prevents values outside 1–999.
+- Because guessing is random (within a narrowing range), the computer may occasionally fail within 10 tries even though it is narrowing the bounds.
 
